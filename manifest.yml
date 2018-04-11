@@ -1,17 +1,9 @@
 ---
 applications:
-  - name: react-starter-app
-    memory: 64M
+  - name: football-data
+    memory: 256M
     buildpack: nodejs_buildpack
     command: node server/app.js
     path: dist
-#services:
- # - your-uaa-instace-name
- # - your-timeseries-instance
- # - your-asset-instance
 env:
     node_env: production
-    uaa_service_label : predix-uaa
-    # Add these values for authentication in the cloud
-    #base64ClientCredential: dGVzdDp0ZXN0
-    #loginBase64ClientCredential: dGVzdDp0ZXN0
