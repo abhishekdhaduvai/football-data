@@ -1,0 +1,26 @@
+@import "px-typography-design/_base.typography.scss";
+
+:root {
+  --px-branding-bar-logo-and-title-text-color: grey;
+  --px-card-background-color: #ebeff2;
+  --px-card-header-color: #677e8c;
+  --px-card-icon-color: #677e8c;
+  --px-branding-bar-background-color: #1c2a34;
+  --px-app-nav-item-background-color: #0c1419;
+  --px-app-nav-item-background-color--hover: #1c2a34;
+  --px-app-nav-item-background-color--selected: #1c2a34;
+  --px-app-nav-item-background-color--pressed: #1c2a34;
+  --px-app-nav-item-text-color: #b6c3cc;
+  --px-app-nav-item-stripe-color--selected: #09819c;
+  --px-app-nav-background-color: #0c1419;
+  --px-btn-bare-color: #b6c3cc;
+  --px-base-text-color: #b6c3cc;
+  --px-headings-value-color: #b6c3cc;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "GE Inspira Sans" sans-serif;
+  background: #24343e;
+}
