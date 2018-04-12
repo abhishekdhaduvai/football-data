@@ -9,7 +9,7 @@ svg#chart {
   padding-bottom: 5em;
 }
 
-rect, image {
+rect, image.crest {
   transition: all 1.5s ease 0s;
 }
 
@@ -42,10 +42,6 @@ image.crest, line#avgConceded {
   fill: #616161;
   font-weight: bold;
   opacity: 0.5;
-}
-
-#quad {
-  font-size: 7em;
 }
 
 #yAxisLabel {

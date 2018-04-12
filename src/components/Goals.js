@@ -101,9 +101,14 @@ class Goals extends React.Component {
       canvas.append('image')
         .attr('xlink:href','https://vignette.wikia.nocookie.net/logopedia/images/6/6c/Premier_League_Lion_Crown_%282016%29.svg/revision/latest?cb=20171215054726')
         .attr('id', 'prem')
-        .attr('width', '30%')
-        .attr('x', '35%')
-        .attr('y', '1%')
+        // .attr('width', window.innerWidth/2.5)
+        // .attr('x', x(xMax/4))
+        // .attr('y', y(0))
+        .attr('x', '50%')
+        .attr('y', '50%')
+        .attr('width', '100%')
+        .attr('height', '100%')
+        .attr('transform', `translate(${-x(xMax/2)}, ${-y(yMax/2)})`)
         .style('opacity', 0.05);
     }
 
@@ -112,10 +117,10 @@ class Goals extends React.Component {
       canvas.append('g')
         .append('text')
         .attr('class', 'matchday')
-        .attr('id', 'quad')
-        .attr('x', '60%')
-        .attr('y', '85%')
-        .text(() => `Matchday ${week}`);
+        .attr('x', x(77))
+        .attr('y', y(yMax-5))
+        .text(() => `Matchday ${week}`)
+        .style('font-size', window.innerWidth/15)
     } else {
       canvas.select('text.matchday')
         .text(`Matchday ${week}`);
@@ -199,9 +204,11 @@ class Goals extends React.Component {
           .attr('y', (d) => y(d.goalsConceded))
           .attr('height', (d) => {
             if(d.team === 'Tottenham Hotspur FC')
-              return 50;
+              // return window.innerWidth/40 + 10;
+              return window.innerHeight/20 + 10;
             else
-              return 40;
+              // return window.innerWidth/40;
+              return window.innerHeight/20;
           })
           // Create event handlers to show the team's tooltip
           .on('mouseover', (d) => {
