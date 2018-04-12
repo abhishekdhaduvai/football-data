@@ -6,7 +6,7 @@ var APP_DIR = path.resolve(__dirname, './src/');
 
 const config = {
   entry: {
-    main: [APP_DIR + '/index.js', APP_DIR + '/styles.scss']
+    main: [APP_DIR + '/index.js']
   },
   output: {
     filename: 'bundle.js',
