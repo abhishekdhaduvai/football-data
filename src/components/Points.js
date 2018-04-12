@@ -2,186 +2,199 @@ import React from 'react';
 import axios from 'axios';
 
 class Points extends React.Component {
-  componentDidMount() {
-    this.refs.offset1.setAttribute('style', 'stop-color:#fff;stop-opacity:0.5');
-    this.refs.offset2.setAttribute('style', 'stop-color:#faa;stop-opacity:1');
+
+  state = {
+    data: null,
+    gameweek: null,
+    toggle: 'PAUSE'
   }
 
-  render(){
-    var i = 1;
-    function draw(data) {
-      const x = d3.scaleLinear()
-        .domain([0, 110])
-        .range([0, window.innerWidth - 100]);
+  componentDidMount() {
+    this.fetchAndDraw();
+  }
 
-      const y = d3.scaleLinear()
-        .domain([0,20])
-        .range([0,550]);
-
-      const xAxis = d3.axisBottom(x)
-        .ticks(20);
-
-      var canvas = d3.select('#chart')
-        .attr('width', window.innerWidth - 100)
-        .attr('height', 600);
-
-      if(canvas.select('#prem').nodes().length === 0) {
-        canvas.append('image')
-          .attr('xlink:href','https://vignette.wikia.nocookie.net/logopedia/images/6/6c/Premier_League_Lion_Crown_%282016%29.svg/revision/latest?cb=20171215054726')
-          .attr('id', 'prem')
-          .attr('width', '30%')
-          .attr('x', '35%')
-          .attr('y', y(1))
-          .style('opacity', 0.1);
-      }
-
-      if(canvas.select('#xAxis').nodes().length === 0) {
-        canvas.append('g')
-          .attr('id', 'xAxis')
-          .attr('transform', 'translate(0, 550)')
-          .call(xAxis);
-
-        canvas.selectAll('.tick line')
-          .nodes()
-          .map(node => node.setAttribute('y2', -550));
-      }
-
-      var tooltip = d3.select('.tooltip');
-      if(tooltip.nodes().length === 0) {
-        var tooltip = d3.select('body')
-        .append('div')
-        .attr('class', 'tooltip')
-        .style('opacity', 0);
-      }
-
-      var matchday = d3.select('.matchday');
-      if(matchday.nodes().length === 0) {
-        canvas.append('g')
-          .append('text')
-          .attr('class', 'matchday')
-          .attr('x', x(85))
-          .attr('y', y(19))
-          .text(() => `Matchday ${i}`);
-          i++;
-      } else {
-        canvas.select('text.matchday')
-          .text(`Matchday ${i}`);
-          i++;
-      }
-
-      var bars = canvas.selectAll('rect');
-      if(bars.nodes().length === 0) {
-        bars = canvas.append('g')
-          .selectAll('rect')
-          .data(data)
-          .enter()
-            .append('rect')
-            .attr('width', (d) => x(d.points))
-            .attr('height', 20)
-            .attr('fill', 'url(#grad1)')
-            .attr('y', (d, i) => y(i));
-      } else {
-        bars = canvas.selectAll('rect')
-          .nodes()
-          .map((node, i) => node.setAttribute("width", x(data[i].points)))
-      }
-
-      var icons = canvas.selectAll('.crest');
-      /*
-       * If the team crest does not exist already,
-       * append a new 'image' to draw it.
-       */
-      if(icons.nodes().length === 0) {
-        icons = canvas.append('g')
-          .selectAll('.crest')
-          .data(data)
-          .enter()
-            .append('image')
-            .attr('class', 'crest')
-            .attr('xlink:href', d => d.crest)
-            .attr('width', (d) => {
-              if(d.team === 'Liverpool FC' ||
-                d.team === 'Crystal Palace FC')
-                return 25;
-              else if(d.team === 'Huddersfield Town' ||
-                      d.team === 'West Bromwich Albion FC' ||
-                      d.team === 'Tottenham Hotspur FC')
-                return 23;
-              else
-                return 28;
-            })
-            .attr('x', (d) => x(d.points) - 12)
-            .attr('y', (d, i) => {
-              if(d.team === 'Huddersfield Town' ||
-                d.team === 'Liverpool FC' ||
-                d.team === 'Crystal Palace FC')
-                return y(i) - 13;
-              else
-                return y(i) - 5;
-            })
-            // Create event handlers to show the team's tooltip
-            .on('mouseover', (d) => {
-              tooltip.transition()
-                .duration(200)
-                .style('opacity', 0.9);
-              tooltip.html(`${d.team} ${d.points} Pts`)
-                .style('left', (d3.event.pageX + 10) + "px")
-                .style('top', (d3.event.pageY) + "px");
-            })
-            .on('mouseout', (d) => {
-              tooltip.transition()
-                .duration(500)
-                .style('opacity', 0);
-            });
-      } else {
-        /*
-         * If the team crest exists already,
-         * Update its position.
-         */
-        icons = canvas.selectAll('.crest')
-          .nodes()
-          .map((node, i) => node.setAttribute('x', x(data[i].points) - 12));
-
-        // Update the event handler
-        canvas.selectAll('.crest')
-          .data(data)
-          .enter()
-            .on('mouseover', (d) => {
-              tooltip.transition()
-                .duration(200)
-                .style('opacity', 0.9);
-              tooltip.html(`${d.team} ${d.points} Pts`)
-                .style('left', (d3.event.pageX + 10) + "px")
-                .style('top', (d3.event.pageY) + "px");
-            })
-            .on('mouseout', (d) => {
-              tooltip.transition()
-                .duration(500)
-                .style('opacity', 0);
-            })
-          .exit();
-      }
-
-    } // Draw function ends
-
-    var data;
+  fetchAndDraw = () => {
+    let data;
     axios.get('/prem')
     .then(res => {
       data = res.data.slice(1,);
-      console.log('data ', data);
+      this.setState({data});
     })
     .then(() => {
-      data.forEach((table, matchday) => {
-        renderChart(matchday, table)
-      })
+      this.renderChart();
     });
+  }
 
-    function renderChart(matchday, table) {
-      setTimeout(() => {
-        draw(table);
-      }, matchday * 1500);
+  renderChart = () => {
+    this.timeouts = [];
+    this.state.data.forEach((table, matchday) => {
+      this.timeouts.push(setTimeout(() => {
+        this.draw(table, matchday);
+      }, matchday * 1000));
+    });
+  }
+
+  draw = (data, week) => {
+    this.setState({gameweek: week});
+    var width = window.innerWidth - 100;
+    var height = window.innerHeight - 140;
+    var xMax = 110;
+    var yMax = 20;
+
+    const x = d3.scaleLinear()
+        .domain([0, 110])
+        .range([0, width]);
+
+    const y = d3.scaleLinear()
+      .domain([0, 20])
+      .range([0, height]);
+
+    const xAxis = d3.axisBottom(x)
+      .ticks(20);
+
+    var canvas = d3.select('#chart')
+      .attr('width', width)
+      .attr('height', height)
+      .attr('transform', 'translate(5, 0)');
+
+    var tooltip = d3.select('.tooltip');
+    if(tooltip.nodes().length === 0) {
+      var tooltip = d3.select('body')
+      .append('div')
+      .attr('class', 'tooltip')
+      .style('opacity', 0);
     }
 
+    if(canvas.select('#xAxis').nodes().length === 0) {
+      canvas.append('g')
+        .attr('id', 'xAxis')
+        .attr('transform', `translate(0, ${height})`)
+        .call(xAxis);
+
+      canvas.selectAll('.tick line')
+        .nodes()
+        .map(node => node.setAttribute('y2', -height));
+    }
+
+    if(canvas.select('#xAxisLabel').nodes().length === 0) {
+      canvas.append('g')
+        .append('text')
+        .text('Points')
+        .attr('id', 'xAxisLabel')
+        .attr('x', x(xMax/2))
+        .attr('y', height + 50)
+        .style("text-anchor", "middle");
+    }
+
+    if(canvas.select('#prem').nodes().length === 0) {
+      canvas.append('image')
+        .attr('xlink:href','https://vignette.wikia.nocookie.net/logopedia/images/6/6c/Premier_League_Lion_Crown_%282016%29.svg/revision/latest?cb=20171215054726')
+        .attr('id', 'prem')
+        .attr('x', '50%')
+        .attr('y', '50%')
+        .attr('width', '100%')
+        .attr('height', '100%')
+        .attr('transform', `translate(${-x(xMax/2)}, ${-y(yMax/2)})`)
+        .style('opacity', 0.05);
+    }
+
+    var matchday = d3.select('.matchday');
+    if(matchday.nodes().length === 0) {
+      canvas.append('g')
+        .append('text')
+        .attr('class', 'matchday')
+        .attr('x', x(72))
+        .attr('y', y(yMax-1))
+        .text(() => `Matchday ${week}`)
+        .style('font-size', window.innerWidth/15);
+    } else {
+      canvas.select('text.matchday')
+        .text(`Matchday ${week}`);
+    }
+
+    // var bars = canvas.selectAll('rect.bar');
+    // if(bars.nodes().length === 0) {
+    //   bars = canvas.append('g')
+    //     .selectAll('rect.bar')
+    //     .data(data.table)
+    //     .enter()
+    //     .append('rect')
+    //     .attr('class', 'bar')
+    //     .attr('x', x(0))
+    //     .attr('y', (d, i) => y(i))
+    //     .attr('stroke', '#000')
+    //     .attr('fill', '#faa')
+    //     .attr('height', 10)
+    //     .attr('width', (d) => x(d.points))
+    // } else {
+    //   canvas.selectAll('rect.bar')
+    //     .nodes()
+    //     .map((node, i) => {
+    //       node.setAttribute('width', x(data.table[i].points))
+    //     });
+    // }
+
+    var icons = canvas.selectAll('image.crest');
+    // Check if there are icons on the chart already
+    if(icons.nodes().length === 0) {
+      icons = canvas.append('g')
+        .selectAll('image.crest')
+        .data(data.table)
+        .enter()
+          .append('image')
+          .attr('class', 'crest')
+          .attr('xlink:href', d => d.crest)
+          .attr('x', (d) => x(d.points) - 12)
+          .attr('y', (d, i) => y(i))
+          .attr('height', (d) => {
+            if(d.team === 'Tottenham Hotspur FC')
+              // return window.innerWidth/40 + 10;
+              return window.innerHeight/20 + 10;
+            else
+              // return window.innerWidth/40;
+              return window.innerHeight/20;
+          })
+          // Create event handlers to show the team's tooltip
+          .on('mouseover', (d) => {
+            tooltip.transition()
+              .duration(200)
+              .style('opacity', 0.9);
+            tooltip.html(`
+              <div><strong>${d.team}</strong></div>
+              <div>Points: ${d.points}</div>
+            `)
+              .style('left', (d3.event.pageX + 10) + "px")
+              .style('top', (d3.event.pageY) + "px");
+          })
+          .on('mouseout', (d) => {
+            tooltip.transition()
+              .duration(500)
+              .style('opacity', 0);
+          });
+    } else {
+      icons = canvas.selectAll('.crest')
+        .nodes()
+        .map((node, i) => {
+          node.setAttribute('x', x(data.table[i].points) - 12)
+          node.setAttribute('y', y(i))
+          return node;
+        });
+      // Update the event handler
+      canvas.selectAll('image.crest')
+        .data(data.table)
+        .enter()
+          .on('mouseover', (d) => {
+            tooltip.html(`
+              <div><strong>${d.team}</strong></div>
+              <div>Points: ${d.points}</div>
+            `)
+              .style('left', (d3.event.pageX + 10) + "px")
+              .style('top', (d3.event.pageY) + "px");
+          });
+    }
+  }
+
+  render() {
     return (
       <div style={styles.container}>
         <div style={styles.chartContainer}>
@@ -191,7 +204,6 @@ class Points extends React.Component {
                 <stop offset="0%" ref='offset1' />
                 <stop offset="100%" ref='offset2' />
               </linearGradient>
-
             </defs>
           </svg>
         </div>
