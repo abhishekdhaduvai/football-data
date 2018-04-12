@@ -1,16 +1,22 @@
 /* Add your CSS here */
 * {
   font-family: 'PT Sans Narrow', sans-serif;
+  user-select: none;
+  outline-style:none;
+}
+
+body {
+  margin: 0;
 }
 
 svg#chart {
-  padding-top: 1em;
+  padding-top: 2em;
   padding-left: 4em;
   padding-bottom: 5em;
 }
 
 rect, image.crest {
-  transition: all 1.5s ease 0s;
+  transition: all 1s ease 0s;
 }
 
 image.crest, line#avgConceded {
@@ -18,8 +24,8 @@ image.crest, line#avgConceded {
 }
 
 .svg {
-  width: 100%;
-  height: 100%;
+  width: 75%;
+  height: 75%;
 }
 
 .tooltip {

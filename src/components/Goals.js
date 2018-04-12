@@ -3,6 +3,10 @@ import axios from 'axios';
 
 class Goals extends React.Component {
 
+  state = {
+    data: null,
+  }
+
   componentDidMount() {
     this.fetchAndDraw();
   }
@@ -12,24 +16,32 @@ class Goals extends React.Component {
     axios.get('/prem/goals')
     .then(res => {
       data = res.data.slice(1,);
+      this.setState({data});
     })
     .then(() => {
-      data.forEach((table, matchday) => {
-        this.renderChart(matchday, table)
-      })
+      this.renderChart();
     });
   }
 
-  renderChart = (matchday, table) => {
-    setTimeout(() => {
-      this.draw(table, matchday);
-    }, matchday * 1500);
+  redraw = () => {
+    this.timeouts.forEach(timeout => {
+      clearTimeout(timeout);
+    });
+    this.renderChart();
+  }
+
+  renderChart = () => {
+    this.timeouts = [];
+    this.state.data.forEach((table, matchday) => {
+      this.timeouts.push(setTimeout(() => {
+        this.draw(table, matchday);
+      }, matchday * 1000));
+    });
   }
 
   draw = (data, week) => {
-
     var width = window.innerWidth - 100;
-    var height = window.innerHeight - 200;
+    var height = window.innerHeight - 140;
     var xMax = 120;
     var yMax = 80;
 
@@ -101,9 +113,6 @@ class Goals extends React.Component {
       canvas.append('image')
         .attr('xlink:href','https://vignette.wikia.nocookie.net/logopedia/images/6/6c/Premier_League_Lion_Crown_%282016%29.svg/revision/latest?cb=20171215054726')
         .attr('id', 'prem')
-        // .attr('width', window.innerWidth/2.5)
-        // .attr('x', x(xMax/4))
-        // .attr('y', y(0))
         .attr('x', '50%')
         .attr('y', '50%')
         .attr('width', '100%')
@@ -216,7 +225,7 @@ class Goals extends React.Component {
               .duration(200)
               .style('opacity', 0.9);
             tooltip.html(`
-              <div>${d.team}</div>
+              <div><strong>${d.team}</strong></div>
               <div>Scored ${d.goalsScored}</div>
               <div>Conceded ${d.goalsConceded}</div>
             `)
@@ -241,21 +250,13 @@ class Goals extends React.Component {
         .data(data.table)
         .enter()
           .on('mouseover', (d) => {
-            tooltip.transition()
-              .duration(200)
-              .style('opacity', 0.9);
             tooltip.html(`
-              <div>${d.team}</div>
-              <div>Scored ${d.goalsScored}</div>
+              <div><strong>${d.team}</strong></div>
+              <div>Scoreasdd ${d.goalsScored}</div>
               <div>Conceded ${d.goalsConceded}</div>
             `)
               .style('left', (d3.event.pageX + 10) + "px")
               .style('top', (d3.event.pageY) + "px");
-          })
-          .on('mouseout', (d) => {
-            tooltip.transition()
-              .duration(500)
-              .style('opacity', 0);
           });
     }
   }
@@ -264,15 +265,12 @@ class Goals extends React.Component {
     return (
       <div style={styles.container}>
         <div style={styles.chartContainer}>
-          <svg id='chart'>
-            <defs>
-              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%" spreadMethod="repeat">
-                <stop offset="0%" ref='offset1' />
-                <stop offset="100%" ref='offset2' />
-              </linearGradient>
-
-            </defs>
-          </svg>
+          <svg id='chart'></svg>
+          <button
+            onClick={this.redraw}
+            style={styles.button}>
+            RESTART
+          </button>
         </div>
       </div>
     )
@@ -289,7 +287,19 @@ const styles = {
   chartContainer: {
     boxShadow: '0px 0px 5px 0px rgba(0,0,0,0.1)',
     overflow: 'scroll',
-    margin: '1em'
+    margin: 10
+  },
+  button: {
+    position: 'absolute',
+    top: '7em',
+    right: '7em',
+    padding: '1em',
+    fontFamily: 'sans-serif',
+    borderRadius: '1em',
+    cursor: 'pointer',
+    boxShadow: '0px 0px 5px 0px rgba(0,0,0,0.1)',
+    color: 'white',
+    background: '#370d3a'
   }
 }
 
