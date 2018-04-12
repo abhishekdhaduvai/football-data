@@ -15,7 +15,7 @@ svg#chart {
   padding-bottom: 5em;
 }
 
-rect, image.crest {
+rect, image.crest, text, line {
   transition: all 1s ease 0s;
 }
 
@@ -52,4 +52,16 @@ image.crest, line#avgConceded {
 
 #yAxisLabel {
   transform: rotate(90deg);
+}
+
+#vertical {
+  width: 1px;
+  display: inline-block;
+  position: absolute;
+  border-right: 2px solid;
+  transition: all 1s ease 0s;
+}
+
+#pauseBtn {
+  right: 15em !important;
 }

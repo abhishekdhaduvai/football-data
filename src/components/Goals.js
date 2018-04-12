@@ -5,6 +5,8 @@ class Goals extends React.Component {
 
   state = {
     data: null,
+    gameweek: null,
+    toggle: 'PAUSE'
   }
 
   componentDidMount() {
@@ -24,10 +26,29 @@ class Goals extends React.Component {
   }
 
   redraw = () => {
+    this.setState({toggle: 'PAUSE'});
     this.timeouts.forEach(timeout => {
       clearTimeout(timeout);
     });
     this.renderChart();
+  }
+
+  toggleAnimation = () => {
+    const { gameweek, toggle, data } = this.state;
+
+    if(toggle === 'PAUSE') {
+      for(let i=gameweek; i<data.length; i++) {
+        clearTimeout(this.timeouts[i]);
+      }
+      this.setState({toggle: 'RESUME'});
+    } else {
+      for(let i=gameweek; i<data.length; i++) {
+        this.timeouts[i] = setTimeout(() => {
+          this.draw(data[i], i);
+        }, (i - gameweek) * 1000);
+      }
+      this.setState({toggle: 'PAUSE'});
+    }
   }
 
   renderChart = () => {
@@ -40,6 +61,7 @@ class Goals extends React.Component {
   }
 
   draw = (data, week) => {
+    this.setState({gameweek: week});
     var width = window.innerWidth - 100;
     var height = window.innerHeight - 140;
     var xMax = 120;
@@ -96,7 +118,7 @@ class Goals extends React.Component {
         .attr('id', 'xAxisLabel')
         .attr('x', x(xMax/2))
         .attr('y', height + 50)
-        .style("text-anchor", "middle")
+        .style("text-anchor", "middle");
     }
 
     if(canvas.select('#yAxisLabel').nodes().length === 0) {
@@ -106,7 +128,7 @@ class Goals extends React.Component {
         .attr('id', 'yAxisLabel')
         .attr('x', x(25))
         .attr('y', 45)
-        .style('text-anchor', 'middle')
+        .style('text-anchor', 'middle');
     }
 
     if(canvas.select('#prem').nodes().length === 0) {
@@ -129,7 +151,7 @@ class Goals extends React.Component {
         .attr('x', x(77))
         .attr('y', y(yMax-5))
         .text(() => `Matchday ${week}`)
-        .style('font-size', window.innerWidth/15)
+        .style('font-size', window.innerWidth/15);
     } else {
       canvas.select('text.matchday')
         .text(`Matchday ${week}`);
@@ -144,14 +166,11 @@ class Goals extends React.Component {
         .attr('x1', x(0))
         .attr('x2', x(0))
         .attr('stroke', '#000')
-        .attr('stroke-width', 2)
+        .attr('stroke-width', 2);
     } else {
-      avgScoredLine.nodes()
-        .map((node, i ) => {
-          node.setAttribute('x1', x(data.avgGoalsScored))
-          node.setAttribute('x2', x(data.avgGoalsScored))
-          return node;
-        });
+      canvas.select('line#avgScored')
+        .attr('x1', x(data.avgGoalsScored))
+        .attr('x2', x(data.avgGoalsScored));
     }
 
     var avgScoredLabel = canvas.selectAll('#avgScoredLabel')
@@ -161,10 +180,10 @@ class Goals extends React.Component {
         .attr('id', 'avgScoredLabel')
         .text('Average No. of Goals scored')
         .attr('x', x(1))
-        .attr('y', y(yMax - 1))
+        .attr('y', y(yMax - 1));
     } else {
-      avgScoredLabel.nodes()
-        .map((node, i) => node.setAttribute('x', x(data.avgGoalsScored+1)))
+      canvas.select('text#avgScoredLabel')
+        .attr('x', x(data.avgGoalsScored+1));
     }
 
     var avgConcededLine = canvas.selectAll('line#avgConceded');
@@ -176,14 +195,11 @@ class Goals extends React.Component {
         .attr('x1', 0)
         .attr('x2', x(width))
         .attr('stroke', '#000')
-        .attr('stroke-width', 2)
+        .attr('stroke-width', 2);
     } else {
-      avgConcededLine.nodes()
-        .map((node, i ) => {
-          node.setAttribute('y1', y(data.avgGoalsConceded))
-          node.setAttribute('y2', y(data.avgGoalsConceded))
-          return node;
-        });
+      canvas.select('line#avgConceded')
+        .attr('y1', y(data.avgGoalsConceded))
+        .attr('y2', y(data.avgGoalsConceded));
     }
 
     var avgConcededLabel = canvas.selectAll('#avgConcededLabel')
@@ -193,10 +209,10 @@ class Goals extends React.Component {
         .attr('id', 'avgConcededLabel')
         .text('Average No. of Goals conceded')
         .attr('x', x(1))
-        .attr('y', y(-1))
+        .attr('y', y(-1));
     } else {
-      avgConcededLabel.nodes()
-        .map((node, i) => node.setAttribute('y', y(data.avgGoalsConceded-1)))
+      canvas.select('#avgConcededLabel')
+        .attr('y', y(data.avgGoalsConceded-1));
     }
 
     var icons = canvas.selectAll('image.crest');
@@ -264,12 +280,19 @@ class Goals extends React.Component {
   render() {
     return (
       <div style={styles.container}>
-        <div style={styles.chartContainer}>
+        <div id='chartContainer' style={styles.chartContainer}>
           <svg id='chart'></svg>
+          {/* <div id='vertical'></div> */}
           <button
             onClick={this.redraw}
             style={styles.button}>
             RESTART
+          </button>
+          <button
+            id='pauseBtn'
+            onClick={this.toggleAnimation}
+            style={styles.button}>
+            {this.state.toggle}
           </button>
         </div>
       </div>
@@ -299,7 +322,8 @@ const styles = {
     cursor: 'pointer',
     boxShadow: '0px 0px 5px 0px rgba(0,0,0,0.1)',
     color: 'white',
-    background: '#370d3a'
+    background: '#370d3a',
+    width: '7em'
   }
 }
 
